@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Произведения – Интертекстуални нишки{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+  <div class="col">
+    <h2 class="mb-0 text-white">Произведения</h2>
+    <p class="text-secondary mb-0">{{ works|length }} от {{ all_works|length }}</p>
+  </div>
+</div>
+
+<!-- Era filter -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a href="{{ url_for('works_grid') }}"
+     class="btn btn-sm {% if not active_era %}btn-light{% else %}btn-outline-secondary text-light{% endif %}">
+    Всички
+  </a>
+  {% for era in eras %}
+  <a href="{{ url_for('index', era=era) }}"
+     class="btn btn-sm era-btn {% if active_era == era %}active{% endif %}"
+     style="--accent: {{ era_colors[era].accent }}; border-color: {{ era_colors[era].accent }}; color: {{ era_colors[era].accent }};">
+    {{ era }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Works grid -->
+{% if works %}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+  {% for work in works %}
+  <div class="col">
+    <a href="{{ url_for('work_detail', work_id=work.id) }}" class="text-decoration-none">
+      <div class="card work-card h-100"
+           style="--accent: {{ era_colors[work.era].accent }};">
+        <div class="card-body">
+          <div class="era-pill mb-2"
+               style="background: {{ era_colors[work.era].accent }}22; color: {{ era_colors[work.era].accent }}; border: 1px solid {{ era_colors[work.era].accent }}44;">
+            {{ work.era }}
+          </div>
+          <h6 class="card-title text-white fw-bold mb-1">{{ work.title }}</h6>
+          <p class="text-secondary small mb-0">{{ work.author }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-secondary">Няма произведения за избраното.</div>
+{% endif %}
+{% endblock %}

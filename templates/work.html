@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ work.title }} – Интертекстуални нишки{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('works_grid') }}" class="text-secondary text-decoration-none">
+    <i class="bi bi-arrow-left me-1"></i>Назад
+  </a>
+</div>
+
+<!-- Work header -->
+<div class="card work-header mb-4"
+     style="--accent: {{ era_colors[work.era].accent }}; border-left: 4px solid {{ era_colors[work.era].accent }};">
+  <div class="card-body">
+    <div class="era-pill mb-2 d-inline-block"
+         style="background: {{ era_colors[work.era].accent }}22; color: {{ era_colors[work.era].accent }}; border: 1px solid {{ era_colors[work.era].accent }}44;">
+      {{ work.era }}
+    </div>
+    <h2 class="text-white fw-bold mb-1">{{ work.title }}</h2>
+    <p class="text-secondary mb-3">{{ work.author }}</p>
+    {% if work.description %}
+    <p class="text-light mb-0" style="opacity:.8; font-size:.9rem;">{{ work.description }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="d-flex align-items-center gap-3 mb-4">
+  <h5 class="text-white mb-0">Връзки с други произведения</h5>
+  <span class="badge text-white" style="background: {{ era_colors[work.era].accent }};">
+    {{ connections|length }} / {{ total_others }}
+  </span>
+</div>
+
+<!-- Connected works -->
+{% if connections %}
+<div class="row g-3 mb-5">
+  {% for conn in connections %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card conn-card h-100"
+         style="--accent: {{ era_colors[conn.other.era].accent }}; border-top: 3px solid {{ era_colors[conn.other.era].accent }};">
+      <div class="card-body">
+        <div class="era-pill mb-2 d-inline-block"
+             style="background: {{ era_colors[conn.other.era].accent }}22; color: {{ era_colors[conn.other.era].accent }}; border: 1px solid {{ era_colors[conn.other.era].accent }}44;">
+          {{ conn.other.era }}
+        </div>
+        <h6 class="fw-bold text-white mb-0">
+          <a href="{{ url_for('work_detail', work_id=conn.other.id) }}" class="text-white text-decoration-none">
+            {{ conn.other.title }}
+          </a>
+        </h6>
+        <p class="text-secondary small mb-2">{{ conn.other.author }}</p>
+        <p class="conn-title mb-2" style="color: {{ era_colors[conn.other.era].accent }}; font-size:.8rem; font-weight:600;">
+          {{ conn.title }}
+        </p>
+        <p class="text-secondary small mb-0" style="font-size:.8rem; line-height:1.5;">
+          {{ conn.description }}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Unconnected works -->
+{% if unconnected %}
+<h6 class="text-secondary fw-semibold mb-3 text-uppercase small">Без директна връзка ({{ unconnected|length }})</h6>
+<div class="row g-2">
+  {% for w in unconnected %}
+  <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+    <a href="{{ url_for('work_detail', work_id=w.id) }}"
+       class="card card-no-conn text-decoration-none d-block">
+      <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+        <span class="text-white small fw-semibold">{{ w.title }}</span>
+        <span class="text-secondary small">{{ w.author }}</span>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

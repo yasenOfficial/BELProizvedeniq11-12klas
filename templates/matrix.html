@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block container_class %}p-0 overflow-hidden{% endblock %}
+
+{% block content %}
+<div class="matrix-page">
+  <div class="matrix-scroll">
+    <table class="matrix-tbl" id="matrixTbl">
+      <thead>
+        <tr>
+          <th class="mx-corner"></th>
+          {% for idx, work in enumerate(works) %}
+          <th class="mx-col-hdr" data-col="{{ idx }}"
+              style="--accent:{{ era_colors[work.era].accent }};color:{{ era_colors[work.era].accent }}">
+            <span class="mx-col-title">{{ work.title }}</span>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for i, row_work in enumerate(works) %}
+        <tr>
+          <th class="mx-row-hdr" data-row="{{ i }}"
+              style="--accent:{{ era_colors[row_work.era].accent }};color:{{ era_colors[row_work.era].accent }}">
+            <span class="mx-row-title">{{ row_work.title }}</span>
+          </th>
+          {% for j, cell in enumerate(grid[i]) %}
+          {% if cell is none %}
+          <td class="mx-cell mx-self" data-row="{{ i }}" data-col="{{ j }}"></td>
+          {% elif cell %}
+          <td class="mx-cell mx-conn"
+              data-row="{{ i }}" data-col="{{ j }}"
+              data-title="{{ cell.title | e }}"
+              data-desc="{{ cell.description | e }}"
+              data-from="{{ row_work.title | e }}"
+              data-to="{{ works[j].title | e }}"
+              data-fc="{{ era_colors[row_work.era].accent }}"
+              data-tc="{{ era_colors[works[j].era].accent }}">
+            <span class="mx-dot" style="background:linear-gradient(135deg,{{ era_colors[row_work.era].accent }},{{ era_colors[works[j].era].accent }})"></span>
+          </td>
+          {% else %}
+          <td class="mx-cell mx-empty" data-row="{{ i }}" data-col="{{ j }}"></td>
+          {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="popup" class="mx-popup" style="display:none" onclick="closePopup(event)">
+  <div class="mx-popup-box" onclick="event.stopPropagation()">
+    <div class="mx-popup-drag"></div>
+    <button class="mx-popup-close" onclick="closePopup()">×</button>
+    <div class="mx-popup-works">
+      <span id="popFrom" class="mx-popup-work"></span>
+      <span class="mx-popup-arrow">↔</span>
+      <span id="popTo" class="mx-popup-work"></span>
+    </div>
+    <div id="popTitle" class="mx-popup-title"></div>
+    <div id="popDesc" class="mx-popup-desc"></div>
+  </div>
+</div>
+
+<script>
+const tbl = document.getElementById('matrixTbl');
+
+/* ── sizing ── */
+function resize() {
+  const navH   = document.querySelector('nav').offsetHeight;
+  const mobile = window.innerWidth < 768;
+  let hdrH, hdrW, cw, ch;
+
+  if (mobile) {
+    hdrH = 130;
+    hdrW = 100;
+    cw   = Math.max(Math.floor((window.innerWidth  - hdrW) / 27), 8);
+    ch   = Math.max(Math.floor((window.innerHeight - navH - hdrH) / 27), 8);
+  } else {
+    hdrH = 115;
+    hdrW = 130;
+    const aw = window.innerWidth  - hdrW;
+    const ah = window.innerHeight - navH - hdrH;
+    const s  = Math.max(Math.min(Math.floor(aw / 27), Math.floor(ah / 27)), 14);
+    cw = s; ch = s;
+  }
+
+  const r = document.documentElement;
+  r.style.setProperty('--navh',  navH  + 'px');
+  r.style.setProperty('--cw',    cw    + 'px');
+  r.style.setProperty('--ch',    ch    + 'px');
+  r.style.setProperty('--hdr-h', hdrH  + 'px');
+  r.style.setProperty('--hdr-w', hdrW  + 'px');
+}
+window.addEventListener('load',   resize);
+window.addEventListener('resize', resize);
+
+/* ── hover highlight (desktop only) ── */
+tbl.addEventListener('mouseover', e => {
+  const td = e.target.closest('[data-row]');
+  if (!td) return;
+  clearHL();
+  const row = td.dataset.row, col = td.dataset.col;
+  if (row !== undefined)
+    tbl.querySelectorAll(`[data-row="${row}"]`).forEach(el => el.classList.add('hl-row'));
+  if (col !== undefined)
+    tbl.querySelectorAll(`[data-col="${col}"]`).forEach(el => el.classList.add('hl-col'));
+});
+tbl.addEventListener('mouseleave', clearHL);
+function clearHL() {
+  tbl.querySelectorAll('.hl-row,.hl-col').forEach(el => el.classList.remove('hl-row','hl-col'));
+}
+
+/* ── popup ── */
+tbl.addEventListener('click', e => {
+  const td = e.target.closest('td.mx-conn');
+  if (!td) return;
+  openPopup(td);
+});
+
+// touch: tap on mobile
+tbl.addEventListener('touchend', e => {
+  const td = e.target.closest('td.mx-conn');
+  if (!td) return;
+  e.preventDefault();
+  openPopup(td);
+}, { passive: false });
+
+function openPopup(td) {
+  document.getElementById('popFrom').textContent  = td.dataset.from;
+  document.getElementById('popFrom').style.color  = td.dataset.fc;
+  document.getElementById('popTo').textContent    = td.dataset.to;
+  document.getElementById('popTo').style.color    = td.dataset.tc;
+  document.getElementById('popTitle').textContent = td.dataset.title;
+  document.getElementById('popDesc').textContent  = td.dataset.desc;
+  document.getElementById('popup').style.display  = 'flex';
+}
+function closePopup(e) {
+  document.getElementById('popup').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+</script>
+{% endblock %}
